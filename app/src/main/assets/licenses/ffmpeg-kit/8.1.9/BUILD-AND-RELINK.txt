@@ -1,0 +1,92 @@
+FFmpegKit 8.1.9 — source, build and relinking notice
+====================================================
+
+Cyron Manager uses the non-GPL "full" artifact:
+
+  dev.ffmpegkit-maintained:ffmpeg-kit-full:8.1.9
+  AAR SHA-256: 40b52770a339af3bf8c02d8a9808c89b5f0e0e56eca39c10dc76c01b90f32306
+
+The artifact matches the official release asset:
+
+  https://github.com/ffmpegkit-maintained/ffmpeg/releases/download/v8.1.9-lts-android/ffmpeg-kit-full-8.1.9-arm64-v8a-x86_64.aar
+
+Provenance
+----------
+
+  Maintained repository: https://github.com/ffmpegkit-maintained/ffmpeg
+  Release tag:           v8.1.9-lts-android
+  Release commit:        469e560b89a9ba4cab357d2c306c676b0c611745
+  FFmpeg version:        n8.1.3
+  Android NDK:           r27c
+  Android API level:     24
+  ABIs:                  arm64-v8a, x86_64
+  Link type:             shared libraries; --disable-static --enable-shared
+  License configuration: --enable-version3, no --enable-gpl, no --enable-nonfree
+
+The exact per-library SHA-256 values are in native-libs.sha256. Paths in that
+file are relative to the extracted AAR root. The full-gpl artifact is not used.
+
+Corresponding source
+--------------------
+
+The maintained repository at the tag and commit above is the authoritative
+source for FFmpegKit, its JNI wrapper, build scripts, packaging scripts,
+patches, and the versions of enabled external libraries. Clone it with
+submodules so the exact FFmpeg and external-library sources are available:
+
+  git clone --recurse-submodules --branch v8.1.9-lts-android \
+    https://github.com/ffmpegkit-maintained/ffmpeg.git
+  git -C ffmpeg checkout 469e560b89a9ba4cab357d2c306c676b0c611745
+
+FFmpeg upstream source for n8.1.3 is available at:
+
+  https://github.com/ffmpeg/ffmpeg/archive/refs/tags/n8.1.3.tar.gz
+
+Use the build scripts and dependency revisions from the checked-out maintained
+commit. Do not combine libraries from different releases. The required build
+environment is the upstream Android/NDK toolchain plus JDK 17 and the Android
+SDK; follow the scripts in that source tree for the exact build commands.
+
+Notice corrections
+------------------
+
+The file upstream-res/source.txt is preserved verbatim from the AAR for
+provenance. It is stale Arthenica boilerplate: its retired wiki/email and its
+"GPL v3.0" wording do not describe this maintained non-GPL artifact. This file
+provides the corrected source location and license path.
+
+The AAR's license_libiconv.txt contains GPLv3 program text. GNU libiconv 1.17's
+library is licensed under LGPLv2.1; GPLv3 applies to the iconv program. The
+correct library text is included as libiconv-LGPL-2.1.txt. The complete
+LGPLv2.0, LGPLv2.1, LGPLv3 and GPLv3 texts are included in the app's license
+assets, together with all external-library notices extracted from the AAR.
+
+Relinking and installation information
+--------------------------------------
+
+Cyron Manager distributes under LGPLv3 section 4(d)(0): the corresponding
+source, application code, required data/utilities and reproducible build path
+are provided instead of claiming a runtime library-picker that is not present
+in the app. The Android libraries are dynamically linked shared objects, but a
+signed APK does not allow an ordinary user to overwrite them in place.
+
+To use a modified FFmpegKit build:
+
+1. Obtain the exact source and build a modified AAR with the upstream scripts
+   for the target ABI. Preserve the FFmpegKit Java API and the shared-library
+   names/ABI required by this app.
+2. Verify the produced libraries and keep the modified source and build scripts
+   available under the applicable LGPL terms.
+3. Replace the FFmpegKit dependency in app/build.gradle.kts with the modified
+   AAR through a local Maven repository or files(...) dependency.
+4. Build Cyron Manager from this repository with JDK 17, Android SDK 36 and the
+   checked-in Gradle wrapper.
+5. Sign the resulting APK with your own key and install it. The Cyron release
+   signing key is private and is not distributed.
+
+The application source is Apache-2.0. The in-app license screen provides this
+notice and the full texts; it does not claim an unimplemented runtime
+replacement feature. LAME and other LGPL external libraries are covered by the
+same source/build path and their extracted notices.
+
+This is a technical compliance notice, not legal advice.

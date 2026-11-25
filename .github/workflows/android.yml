@@ -1,0 +1,147 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Unit tests, lint, integration test and debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check public-source safety
+        run: node scripts/check-public.mjs
+      - name: Review dependency changes
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
+        with:
+          fail-on-severity: high
+      - name: Set up JDK 17
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+      - name: Install Android platforms and build tools
+        run: sdkmanager "platforms;android-35" "platforms;android-36" "build-tools;36.0.0"
+      - name: Verify SBOM is current
+        run: |
+          sh ./gradlew --no-daemon generateSbom
+          git diff --exit-code -- SBOM.json
+      - name: Verify unit tests, lint and debug APK
+        run: sh ./gradlew --no-daemon --stacktrace testDebugUnitTest lintDebug assembleDebug
+      - name: Run Room integration test on Android emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: sh ./gradlew --no-daemon --stacktrace connectedDebugAndroidTest
+      - name: Upload debug APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cyron-manager-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Signed release APKs and draft GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    environment: release
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check public-source safety
+        run: node scripts/check-public.mjs
+      - name: Validate version tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          node -e 'const fs=require("node:fs"); const text=fs.readFileSync("app/build.gradle.kts","utf8"); const match=text.match(/versionName\s*=\s*"([^"]+)"/); if (!match || match[1] !== process.argv[1]) { console.error("Tag version does not match app/build.gradle.kts"); process.exit(1); }' "$version"
+      - name: Decode signing keystore
+        env:
+          CYRON_KEYSTORE_BASE64: ${{ secrets.CYRON_KEYSTORE_BASE64 }}
+          CYRON_KEYSTORE_PASSWORD: ${{ secrets.CYRON_KEYSTORE_PASSWORD }}
+          CYRON_KEY_ALIAS: ${{ secrets.CYRON_KEY_ALIAS }}
+          CYRON_KEY_PASSWORD: ${{ secrets.CYRON_KEY_PASSWORD }}
+        run: |
+          : "${CYRON_KEYSTORE_BASE64:?Missing CYRON_KEYSTORE_BASE64}"
+          : "${CYRON_KEYSTORE_PASSWORD:?Missing CYRON_KEYSTORE_PASSWORD}"
+          : "${CYRON_KEY_ALIAS:?Missing CYRON_KEY_ALIAS}"
+          : "${CYRON_KEY_PASSWORD:?Missing CYRON_KEY_PASSWORD}"
+          umask 077
+          printf '%s' "$CYRON_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/cyron-release.keystore"
+          test -s "$RUNNER_TEMP/cyron-release.keystore"
+      - name: Set up JDK 17
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+      - name: Install Android platforms and build tools
+        run: sdkmanager "platforms;android-35" "platforms;android-36" "build-tools;36.0.0"
+      - name: Build signed release APKs
+        env:
+          CYRON_KEYSTORE_PATH: ${{ runner.temp }}/cyron-release.keystore
+          CYRON_KEYSTORE_PASSWORD: ${{ secrets.CYRON_KEYSTORE_PASSWORD }}
+          CYRON_KEY_ALIAS: ${{ secrets.CYRON_KEY_ALIAS }}
+          CYRON_KEY_PASSWORD: ${{ secrets.CYRON_KEY_PASSWORD }}
+        run: sh ./gradlew --no-daemon --stacktrace assembleRelease
+      - name: Verify release notice bundle
+        run: sh ./gradlew --no-daemon --stacktrace verifyReleaseNotices
+      - name: Verify APK signatures and checksums
+        run: |
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/release/*.apk)
+          test "${#apks[@]}" -eq 3
+          for apk in "${apks[@]}"; do
+            apksigner verify --verbose --print-certs "$apk"
+          done
+          (cd app/build/outputs/apk/release && sha256sum ./*.apk > SHA256SUMS.txt)
+      - name: Upload signed release APKs
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cyron-manager-signed-release
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/release/*.apk)
+          checksums=app/build/outputs/apk/release/SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" "${apks[@]}" "$checksums" --draft --verify-tag --generate-notes --title "Cyron Manager ${GITHUB_REF_NAME#v}"

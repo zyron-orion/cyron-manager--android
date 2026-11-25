@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an improvement for Cyron Manager
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user need, not only a proposed implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      options:
+        - label: This keeps downloads on-device and does not require an account or backend.
+          required: false
+        - label: This does not add broad storage access or weaken URL/file verification.
+          required: false

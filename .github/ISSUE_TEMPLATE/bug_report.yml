@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible problem in Cyron Manager
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include private URLs, access tokens, signing material, or personal files. Report security vulnerabilities privately through GitHub Security Advisories.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: 1.0.6
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device/emulator
+      placeholder: Android 15, Pixel 8
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Number the steps and include the download mode used.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or screenshots
+      description: Remove personal data and URLs before attaching anything.

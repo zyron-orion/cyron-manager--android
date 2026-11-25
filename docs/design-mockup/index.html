@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090b10">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="NOVA Download — static UI prototype for the Cyron Manager Android app. It does not download files.">
+  <title>NOVA Download — UI prototype (no real downloads)</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#dashboard" aria-label="NOVA Download home">
+        <span class="brand-mark"><i data-lucide="orbit"></i></span>
+        <span class="brand-copy"><strong>NOVA</strong><span data-i18n="logoSubtitle">DOWNLOAD MANAGER</span></span>
+        <span class="brand-version" data-i18n="pro">PRO</span>
+      </a>
+      <div class="sidebar-section-label" data-i18n="workspace">WORKSPACE</div>
+      <nav class="primary-nav" aria-label="Workspace">
+        <a href="#dashboard" class="nav-link" data-page="dashboard"><i data-lucide="layout-dashboard"></i><span data-i18n="overview">Overview</span></a>
+        <a href="#downloads" class="nav-link" data-page="downloads"><i data-lucide="arrow-down-to-line"></i><span data-i18n="downloads">Downloads</span><span class="nav-count" id="navCount">0</span></a>
+        <a href="#add" class="nav-link" data-page="add"><i data-lucide="circle-plus"></i><span data-i18n="addDownload">Add download</span></a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label" data-i18n="library">LIBRARY</div>
+      <nav class="primary-nav" aria-label="Library">
+        <a href="#downloads?filter=completed" class="nav-link" data-page="downloads" data-filter-link="completed"><i data-lucide="circle-check"></i><span data-i18n="completed">Completed</span><span class="nav-dot dot-green"></span></a>
+        <a href="#downloads?filter=active" class="nav-link" data-page="downloads" data-filter-link="active"><i data-lucide="activity"></i><span data-i18n="inProgress">In progress</span><span class="nav-dot dot-blue"></span></a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="storage-card">
+          <div class="storage-top"><span data-i18n="localStorage">LOCAL STORAGE</span><i data-lucide="hard-drive"></i></div>
+          <div class="storage-value" id="storageValue">0 <span>GB</span> <span class="storage-limit">of 256 GB</span></div>
+          <div class="storage-meter"><span id="storageMeter"></span></div>
+          <div class="storage-caption" data-i18n="storageCaption">Simulated download storage</div>
+        </div>
+        <a href="#settings" class="nav-link settings-link" data-page="settings"><i data-lucide="settings-2"></i><span data-i18n="settings">Settings</span><i class="settings-arrow" data-lucide="arrow-up-right"></i></a>
+        <div class="user-chip"><span class="avatar">N</span><span class="user-copy"><strong>NOVA user</strong><span data-i18n="personalPlan">Personal plan</span></span><span class="online-indicator" title="Online"></span></div>
+      </div>
+    </aside>
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+    <main class="main-area" id="mainArea">
+      <div class="prototype-banner" role="note"><strong>UI prototype only.</strong> This page simulates downloads in your browser. It is not connected to the Cyron Manager Android app and never downloads a file.</div>
+      <header class="topbar">
+        <div class="topbar-left"><button class="icon-button mobile-menu" id="mobileMenu" aria-label="Open menu"><i data-lucide="menu"></i></button><div class="breadcrumb"><span data-i18n="yourWorkspace">Your workspace</span><i data-lucide="chevron-right"></i><strong id="breadcrumbCurrent">Overview</strong></div></div>
+        <div class="topbar-actions"><button class="top-search" id="searchShortcut" aria-label="Search downloads"><i data-lucide="search"></i><span data-i18n="searchAnything">Search anything...</span><kbd>⌘ K</kbd></button><span class="topbar-divider"></span><button class="icon-button notification-button" id="notificationButton" aria-label="Notifications"><i data-lucide="bell"></i><span class="notification-dot"></span></button><button class="topbar-cta" id="quickAdd"><i data-lucide="plus"></i><span data-i18n="newDownload">New download</span></button></div>
+      </header>
+      <div class="page-container" id="pageContainer" aria-live="polite"></div>
+    </main>
+    <div class="toast-region" id="toastRegion" role="status" aria-live="polite"></div>
+    <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"><section class="detail-modal" id="modalContent" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
+  </div>
+</body>
+</html>

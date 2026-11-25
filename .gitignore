@@ -1,0 +1,45 @@
+# Gradle and Android Studio
+.gradle/
+.kotlin/
+.idea/
+*.iml
+local.properties
+**/build/
+.externalNativeBuild/
+.cxx/
+captures/
+output-metadata.json
+
+# Generated packages and binaries
+*.apk
+*.aab
+*.ap_
+*.apks
+*.dex
+
+# Local signing material and credentials
+keystore.properties
+keystore.properties.*
+!keystore.properties.example
+*.jks
+*.keystore
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.properties
+.env
+.env.*
+!.env.example
+google-services.json
+service-account*.json
+
+# Crash reports, profiles and logs
+*.log
+*.hprof
+hs_err_pid*.log
+replay_pid*.log
+
+# Operating-system files
+.DS_Store
+Thumbs.db
